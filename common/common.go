@@ -16,6 +16,13 @@ type ComputerInfo struct {
 	Path     []string // Web directory
 }
 
+
+var (
+	// LocalIP Native active IP
+	LocalIP string
+)
+
+
 func Cmdexec(cmd string) string {
 	var c *exec.Cmd
 	var data string
