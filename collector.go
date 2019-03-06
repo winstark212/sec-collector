@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/winstark212/sec-collector/collect"
+	"github.com/winstark212/sec-collector/collector"
 )
 
 
 func main() {
-	fmt.Print(collect.GetCrontab())
+	collect := collector.Windows{}
+	fmt.Print(collect.GetComInfo())
 }

@@ -1,6 +1,6 @@
 // +build linux
 
-package collect
+package collector
 
 import (
 	"io/ioutil"
@@ -10,29 +10,13 @@ import (
 	"github.com/winstark212/sec-collector/common"
 )
 
-type utmp struct {
-	UtType uint32
-	UtPid  uint32    // PID of login process
-	UtLine [32]byte  // device name of tty - "/dev/"
-	UtID   [4]byte   // init id or abbrev. ttyname
-	UtUser [32]byte  // user name
-	UtHost [256]byte // hostname for remote login
-	UtExit struct {
-		ETermination uint16 // process termination status
-		EExit        uint16 // process exit status
-	}
-	UtSession uint32 // Session ID, used for windowing
-	UtTv      struct {
-		TvSec  uint32 /* Seconds */
-		TvUsec uint32 /* Microseconds */
-	}
-	UtAddrV6 [4]uint32 // IP address of remote host
-	Unused   [20]byte  // Reserved for future use
+// Linux struct
+type Linux struct {
 }
 
 // GetComInfo get computer information
-func GetComInfo() (info common.ComputerInfo) {
-	info.IP = common.LocalIP
+func (linux *Linux) GetComInfo() (info ComputerInfo) {
+	info.IP = LocalIP
 	info.Hostname, _ = os.Hostname()
 	out := common.Cmdexec("uname -r")
 	dat, err := ioutil.ReadFile("/etc/redhat-release")
@@ -49,7 +33,7 @@ func GetComInfo() (info common.ComputerInfo) {
 }
 
 // GetCrontab Get scheduled tasks
-func GetCrontab() (resultData []map[string]string) {
+func (linux *Linux) GetCrontab() (resultData []map[string]string) {
 	//system planing task
 	dat, err := ioutil.ReadFile("/etc/crontab")
 	if err != nil {
@@ -94,7 +78,7 @@ func GetCrontab() (resultData []map[string]string) {
 }
 
 // GetListening Get tcp listening port
-func GetListening() (resultData []map[string]string) {
+func (linux *Linux) GetListening() (resultData []map[string]string) {
 	listeningStr := common.Cmdexec("ss -nltp")
 	listeningList := strings.Split(listeningStr, "\n")
 	if len(listeningList) < 2 {
@@ -140,5 +124,47 @@ func GetListening() (resultData []map[string]string) {
 	return resultData
 }
 
+// GetLoginLog get login log
+func (linux *Linux) GetLoginLog() ([]map[string]string) {
+	var resultData []map[string]string
+	return resultData
+}
 
+// GetProcessList get process list
+func (linux *Linux) GetProcessList() ([]map[string]string) {
+	var resultData []map[string]string
+	return resultData
+}
 
+// GetServiceInfo get service list
+func (linux *Linux) GetServiceInfo() ([]map[string]string) {
+	var resultData []map[string]string
+	return resultData
+}
+
+// GetStartup get startup service
+func (linux *Linux) GetStartup() ([]map[string]string) {
+	var resultData []map[string]string
+	return resultData
+}
+
+// GetUser get user list
+func (linux *Linux) GetUser() (resultData []map[string]string) {
+	data, err := ioutil.ReadFile("/etc/passwd")
+	if err != nil {
+		return resultData
+	}
+	userList := strings.Split(string(data), "\n")
+	if len(userList) < 2 {
+		return
+	}
+	for _, info := range userList[0 : len(userList)-2] {
+		if strings.Contains(info, "/nologin") {
+			continue
+		}
+		s := strings.SplitN(info, ":", 2)
+		m := map[string]string{"name": s[0], "description": s[1]}
+		resultData = append(resultData, m)
+	}
+	return resultData
+}

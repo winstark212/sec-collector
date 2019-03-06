@@ -7,21 +7,6 @@ import (
 	"strings"
 )
 
-// ComputerInfo Computer information structure
-type ComputerInfo struct {
-	IP       string   // IP address
-	System   string   // Operating system
-	Hostname string   // Computer name
-	Type     string   // Server type
-	Path     []string // Web directory
-}
-
-
-var (
-	// LocalIP Native active IP
-	LocalIP string
-)
-
 
 func Cmdexec(cmd string) string {
 	var c *exec.Cmd
