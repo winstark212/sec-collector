@@ -1,15 +1,17 @@
 package main
 
 import (
-	"time"
+	// "time"
 	"log"
 	// "encoding/binary"
 	// "os"
 	// "bytes"
-	"github.com/winstark212/sec-collector/common"
+	// "github.com/winstark212/sec-collector/common"
 	"strings"
 	"fmt"
-	"regexp"
+	"io/ioutil"
+	// "regexp"
+	"strconv"
 	"encoding/json"
 
 )
@@ -34,37 +36,90 @@ type utmp struct {
 	Unused   [20]byte  // Reserved for future use
 }
 
-// additional functions
-func getLastb(t string) (result []map[string]string) {
-	var cmd string
-	ti, _ := time.Parse("2006-01-02T15:04:05Z07:00", t)
-	if t == "all" {
-		cmd = "lastb --time-format iso"
-	} else {
-		cmd = fmt.Sprintf("lastb -s %s --time-format iso", ti.Format("20060102150405"))
+
+func getcmdline(pid int) string {
+	cmdlineFile := fmt.Sprintf("/proc/%d/cmdline", pid)
+	cmdlineBytes, e := ioutil.ReadFile(cmdlineFile)
+	if e != nil {
+		return ""
 	}
-	out := common.Cmdexec(cmd)
-	fmt.Print("Result: " + out)
-	logList := strings.Split(out, "\n")
-	for _, v := range logList[0 : len(logList)-3] {
-		m := make(map[string]string)
-		reg := regexp.MustCompile("\\s+")
-		v = reg.ReplaceAllString(strings.TrimSpace(v), " ")
-		s := strings.Split(v, " ")
-		if len(s) < 4 {
-			continue
+	cmdlineBytesLen := len(cmdlineBytes)
+	if cmdlineBytesLen == 0 {
+		return ""
+	}
+	for i, v := range cmdlineBytes {
+		if v == 0 {
+			cmdlineBytes[i] = 0x20
 		}
-		m["status"] = "false"
-		m["username"] = s[0]
-		m["remote"] = s[2]
-		t, _ := time.Parse("2006-01-02T15:04:05Z0700", s[3])
-		m["time"] = t.Format("2006-01-02T15:04:05Z07:00")
-		result = append(result, m)
+	}
+	return strings.TrimSpace(string(cmdlineBytes))
+}
+func getStatus(pid int) (status map[string]string) {
+	status = make(map[string]string)
+	statusFile := fmt.Sprintf("/proc/%d/status", pid)
+	var content []byte
+	var err error
+	content, err = ioutil.ReadFile(statusFile)
+	if err != nil {
+		return
+	}
+	for _, line := range strings.Split(string(content), "\n") {
+		if strings.Contains(line, ":") {
+			kv := strings.SplitN(line, ":", 2)
+			status[kv[0]] = strings.TrimSpace(kv[1])
+		}
 	}
 	return
 }
+
+func dirsUnder(dirPath string) ([]string, error) {
+	fs, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		return []string{}, err
+	}
+
+	sz := len(fs)
+	if sz == 0 {
+		return []string{}, nil
+	}
+	ret := make([]string, 0, sz)
+	for i := 0; i < sz; i++ {
+		if fs[i].IsDir() {
+			name := fs[i].Name()
+			if name != "." && name != ".." {
+				ret = append(ret, name)
+			}
+		}
+	}
+	return ret, nil
+}
+
+func GetProcessList() (resultData []map[string]string) {
+	var dirs []string
+	var err error
+	dirs, err = dirsUnder("/proc")
+	if err != nil || len(dirs) == 0 {
+		return
+	}
+	for _, v := range dirs {
+		pid, err := strconv.Atoi(v)
+		if err != nil {
+			continue
+		}
+		statusInfo := getStatus(pid)
+		command := getcmdline(pid)
+		m := make(map[string]string)
+		m["pid"] = v
+		m["ppid"] = statusInfo["PPid"]
+		m["name"] = statusInfo["Name"]
+		m["command"] = command
+		resultData = append(resultData, m)
+	}
+	return
+}
+
 func main() {
-	result := getLastb("all")
+	result := GetProcessList()
 	jsonResultData, _ := json.Marshal(result)
 	log.Print(string(jsonResultData))
 }

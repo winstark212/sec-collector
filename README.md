@@ -20,4 +20,7 @@
   - `/var/spool/cron`: directory that contains user corntables created by the `crontab` command.  
  [more](https://opensource.com/article/17/11/how-use-cron-linux) 
 
+## /proc filesystem  
+
+The `/proc` filesystem contains a illusionary filesystem. It does not exist on a disk. Instead, the kernerl creates it in memory. It is used to provide information about the system(originally about processes, hence the name).  
 
