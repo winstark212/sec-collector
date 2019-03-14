@@ -3,7 +3,24 @@ package collector
 var (
 	// LocalIP Native active IP
 	LocalIP string
+	Config ClientConfig
 )
+
+
+
+type ClientConfig struct {
+	Cycle  int    // 信息传输频率，单位：分钟
+	UDP    bool   // 是否记录UDP请求
+	LAN    bool   // 是否本地网络请求
+	Mode   string // 模式，考虑中
+	Filter struct {
+		File    []string // 文件hash、文件名
+		IP      []string // IP地址
+		Process []string // 进程名、参数
+	} // 直接过滤不回传的规则
+	MonitorPath []string // 监控目录列表
+	Lasttime    string   // 最后一条登录日志时间
+}
 
 // ComputerInfo computer information struct
 type ComputerInfo struct {
