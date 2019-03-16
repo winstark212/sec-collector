@@ -24,3 +24,36 @@
 
 The `/proc` filesystem contains a illusionary filesystem. It does not exist on a disk. Instead, the kernerl creates it in memory. It is used to provide information about the system(originally about processes, hence the name).  
 
+## `systemd` and `systemctl`  
+A quick practical using systemd service.  
+ - `systemd` is a Linux service manager. It provides the ability to manage and control services.  
+- `systemctl` is a port of `systemd` that provides the ability to interact with `systemd`.  
+
+#### Unit & Unit files  
+
+- In `systemd`, a `unit` refers to any resource that the system knows how to operate on and manage. This is the primary object that `systemd` tools know how to deal with. These resources are defined using configurations files called unit files.  
+
+* Where systemd Unit files found ?
+    * `/lib/systemd/system`  : where software install unit files on the system
+    * `/run/systemd/system`  
+    * `/etc/systemd/system`  
+
+
+#### Service Management  
+
+```  
+sudo systemctl start|stop|restart|reload|enable|disable  application.service  //  control a service 
+sudo systemctl status|is-active|is-enabled|is-failed  application.service // check status a service  
+```  
+
+#### System State Overview  
+
+```  
+systemctl list-units  // list all fo the active units  
+
+systemctl list-units --all // --all to see loaded and inactive units  
+systemctl list-units --type=service  // filter  
+
+```  
+
+[Read more](https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units)  

@@ -6,13 +6,13 @@ import (
 	// "encoding/binary"
 	// "os"
 	// "bytes"
-	// "github.com/winstark212/sec-collector/common"
+	"github.com/winstark212/sec-collector/common"
 	"strings"
 	"fmt"
 	"io/ioutil"
 	// "regexp"
 	"strconv"
-	"encoding/json"
+	// "encoding/json"
 
 )
 
@@ -118,8 +118,15 @@ func GetProcessList() (resultData []map[string]string) {
 	return
 }
 
+func getServiceList() (resultData []map[string]string) {
+	serviceStr := common.Cmdexec("systemctl list-units --type=service")
+	log.Print(serviceStr)
+	return resultData
+}
+
 func main() {
-	result := GetProcessList()
-	jsonResultData, _ := json.Marshal(result)
-	log.Print(string(jsonResultData))
+	// result := GetProcessList()
+	// jsonResultData, _ := json.Marshal(result)
+	// log.Print(string(jsonResultData))
+	getServiceList()
 }
